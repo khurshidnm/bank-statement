@@ -5,6 +5,11 @@ COPY package.json package-lock.json* ./
 RUN npm install
 
 COPY . .
+
+# NEXT_PUBLIC_* vars are inlined into the client JS bundle at build time, not read
+# at container runtime — must be set as a build ARG, not just a runtime env var.
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
 FROM node:20-slim AS runner

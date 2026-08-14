@@ -30,6 +30,7 @@ Project rules for working on the **Universal Data Normalizer & JSON Exporter**. 
 ## Frontend Conventions
 
 - `src/lib/api.ts` is the only module that talks to the backend. Components call `transformFile()`; they don't call `axios`/`fetch` directly.
+- `NEXT_PUBLIC_API_URL` is inlined into the client JS bundle at `next build` time, not read at container runtime. `frontend/Dockerfile` takes it as a build `ARG` (not just `ENV`/runtime), and `docker-compose.yml` passes it under `build.args`, not `environment`. If you add another `NEXT_PUBLIC_*` variable, it needs the same treatment in both files, and changing any of them on a deployed VPS requires `docker compose up --build`, not just a container restart.
 - Client components that use hooks or browser APIs need `"use client"` at the top (see `FileDropzone.tsx`, `JsonViewer.tsx`, `page.tsx`).
 - Styling is Tailwind utility classes only — no CSS modules, no styled-components. Shared design tokens (colors) live in `tailwind.config.ts`.
 - Keep `FileDropzone`, `JsonViewer`, and `Header` presentational and composed from `page.tsx`; page-level state (upload status, progress, result, error) stays in `page.tsx`.

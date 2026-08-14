@@ -458,6 +458,7 @@ This is the recommended path for a self-managed VPS. `docker-compose.yml` builds
    CORS_ORIGINS=https://your-domain.com
    EOF
    ```
+   `NEXT_PUBLIC_API_URL` is passed into the frontend image as a Docker build **arg**, because Next.js inlines `NEXT_PUBLIC_*` variables into the client-side JS bundle at `next build` time — not read from the environment when the container starts. This means: if you ever change it, you must rebuild the image (`docker compose up --build -d`), not just restart the container — a plain restart will keep serving the old value baked into the old bundle.
 
 5. **Build and start both services:**
    ```bash

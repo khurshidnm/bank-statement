@@ -12,9 +12,13 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
-    environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    build:
+      context: ./frontend
+      args:
+        # Build-time only: baked into the client JS bundle, not read at container
+        # runtime. Changing this requires `docker compose up --build`, not just a
+        # container restart.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     expose:
       - "3000"
     ports:
