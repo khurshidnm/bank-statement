@@ -1,0 +1,35 @@
+# Real client data — bank statement samples and their parsed output.
+# These contain real account numbers, company names, and government transaction
+# details. Never track them, even in a private repo.
+/input/
+/output/
+
+# Python
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/*.egg-info/
+*.pyc
+
+# Environment
+backend/.env
+frontend/.env.local
+*.env
+!*.env.example
+!*.env.local.example
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+frontend/.eslintcache
+frontend/tsconfig.tsbuildinfo
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
+

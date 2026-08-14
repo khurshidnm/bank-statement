@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  background-color: theme("colors.background");
+  color: #e6e9ef;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background-color: theme("colors.accent");
+  color: white;
+}
