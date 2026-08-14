@@ -60,6 +60,19 @@ def _map_with_openai(user_prompt: str, api_key: str) -> StandardizedDataset:
     return message.parsed
 
 
+def _coerce_stringified_records(tool_input: dict) -> dict:
+    """Anthropic tool-use occasionally serializes a nested array field to a JSON
+    string instead of returning it natively — seen with schemas (like this one)
+    that use $ref/$defs for a nested list. Normalize before validating."""
+    records = tool_input.get("records")
+    if isinstance(records, str):
+        try:
+            return {**tool_input, "records": json.loads(records)}
+        except json.JSONDecodeError:
+            pass
+    return tool_input
+
+
 def _map_with_anthropic(user_prompt: str, api_key: str) -> StandardizedDataset:
     if not api_key:
         raise AIMappingError("ANTHROPIC_API_KEY is not configured.")
@@ -78,5 +91,5 @@ def _map_with_anthropic(user_prompt: str, api_key: str) -> StandardizedDataset:
     )
     for block in response.content:
         if block.type == "tool_use" and block.name == "emit_standardized_dataset":
-            return StandardizedDataset.model_validate(block.input)
+            return StandardizedDataset.model_validate(_coerce_stringified_records(block.input))
     raise AIMappingError("Model response did not include the expected tool call.")
