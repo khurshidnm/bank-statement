@@ -5,6 +5,10 @@ COPY package.json package-lock.json* ./
 RUN npm install
 
 COPY . .
+# public/ is currently empty and git can't track empty directories, so it may not
+# exist at all after a fresh clone — ensure it's present regardless, since the
+# runner stage below copies it unconditionally.
+RUN mkdir -p public
 
 # NEXT_PUBLIC_* vars are inlined into the client JS bundle at build time, not read
 # at container runtime — must be set as a build ARG, not just a runtime env var.
