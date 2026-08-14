@@ -60,23 +60,27 @@ def _map_with_openai(user_prompt: str, api_key: str) -> StandardizedDataset:
     return message.parsed
 
 
-def _coerce_stringified_records(tool_input: dict) -> dict:
+def _coerce_stringified_records(tool_input: dict, _max_unwraps: int = 5) -> dict:
     """Anthropic tool-use occasionally serializes the records field to a JSON
     string instead of returning it natively — seen with schemas (like this one)
-    that use $ref/$defs for a nested list. Two shapes have been observed in
-    practice: the string holding just the bare array, and the string holding the
-    *entire* outer object with "records" nested inside again. Normalize before
-    validating, handling both."""
+    that use $ref/$defs for a nested list. Multiple shapes have been observed in
+    practice (the bare array as a string; the entire outer object as a string,
+    with "records" nested inside again), so unwrap repeatedly — not just once —
+    until an actual list surfaces or we give up."""
     records = tool_input.get("records")
-    if not isinstance(records, str):
+    if isinstance(records, list):
         return tool_input
-    try:
-        parsed = json.loads(records)
-    except json.JSONDecodeError:
-        return tool_input
-    if isinstance(parsed, dict) and isinstance(parsed.get("records"), list):
-        parsed = parsed["records"]
-    return {**tool_input, "records": parsed}
+    for _ in range(_max_unwraps):
+        if not isinstance(records, str):
+            return tool_input
+        try:
+            parsed = json.loads(records)
+        except json.JSONDecodeError:
+            return tool_input
+        records = parsed["records"] if isinstance(parsed, dict) and "records" in parsed else parsed
+        if isinstance(records, list):
+            return {**tool_input, "records": records}
+    return tool_input
 
 
 def _map_with_anthropic(user_prompt: str, api_key: str) -> StandardizedDataset:

@@ -18,6 +18,12 @@ def test_coerce_stringified_records_parses_double_wrapped_object_string():
     assert coerced["records"] == [{"record_id": "REC-001", "customer_name": "Acme"}]
 
 
+def test_coerce_stringified_records_unwraps_multiple_nesting_levels():
+    malformed = {"records": '{"records": "{\\"records\\": [{\\"record_id\\": \\"REC-001\\"}]}"}'}
+    coerced = _coerce_stringified_records(malformed)
+    assert coerced["records"] == [{"record_id": "REC-001"}]
+
+
 def test_coerce_stringified_records_leaves_native_list_untouched():
     already_correct = {"records": [{"record_id": "REC-001"}]}
     assert _coerce_stringified_records(already_correct) is already_correct
