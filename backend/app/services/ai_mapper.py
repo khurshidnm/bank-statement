@@ -61,16 +61,22 @@ def _map_with_openai(user_prompt: str, api_key: str) -> StandardizedDataset:
 
 
 def _coerce_stringified_records(tool_input: dict) -> dict:
-    """Anthropic tool-use occasionally serializes a nested array field to a JSON
+    """Anthropic tool-use occasionally serializes the records field to a JSON
     string instead of returning it natively — seen with schemas (like this one)
-    that use $ref/$defs for a nested list. Normalize before validating."""
+    that use $ref/$defs for a nested list. Two shapes have been observed in
+    practice: the string holding just the bare array, and the string holding the
+    *entire* outer object with "records" nested inside again. Normalize before
+    validating, handling both."""
     records = tool_input.get("records")
-    if isinstance(records, str):
-        try:
-            return {**tool_input, "records": json.loads(records)}
-        except json.JSONDecodeError:
-            pass
-    return tool_input
+    if not isinstance(records, str):
+        return tool_input
+    try:
+        parsed = json.loads(records)
+    except json.JSONDecodeError:
+        return tool_input
+    if isinstance(parsed, dict) and isinstance(parsed.get("records"), list):
+        parsed = parsed["records"]
+    return {**tool_input, "records": parsed}
 
 
 def _map_with_anthropic(user_prompt: str, api_key: str) -> StandardizedDataset:
